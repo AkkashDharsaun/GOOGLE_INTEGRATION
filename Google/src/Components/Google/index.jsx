@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 
 const Index = () => {
+  // Use Vite env var for backend login endpoint
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   const handleLogin = () => {
-    window.location.href = "https://google-integration-2.onrender.com/login";
+    // Direct user to backend /login which starts the OAuth flow
+    window.location.href = `${API_URL}/login`;
   };
 
   return (
