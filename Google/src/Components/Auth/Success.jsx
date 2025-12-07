@@ -73,7 +73,7 @@ export default function AuthSuccess() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch("https://google-integration-1-6ytp.onrender.com/logout", {
+      const res = await fetch("https://google-integration-2.onrender.com/logout", {
         method: "POST",
         credentials: "include",
       });
