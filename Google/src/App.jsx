@@ -9,7 +9,7 @@ const App = () => {
       <Routes>
         {/* other routes */}
         <Route path="/" element={ <Google />} />
-        <Route path="https://goolgeintegration.vercel.app/auth/success" element={<AuthSuccess />} />
+        <Route path="auth/success" element={<AuthSuccess />} />
       </Routes>
     </BrowserRouter>
     </div>
