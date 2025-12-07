@@ -40,7 +40,7 @@ export default function AuthSuccess() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/me", {
+      const res = await fetch("https://google-integration-backend.onrender.com/api/me", {
         method: "GET",
         credentials: "include",
       });
@@ -73,7 +73,7 @@ export default function AuthSuccess() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch("http://localhost:5000/logout", {
+      const res = await fetch("https://google-integration-backend.onrender.com/logout", {
         method: "POST",
         credentials: "include",
       });

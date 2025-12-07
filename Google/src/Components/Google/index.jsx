@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 const Index = () => {
   const handleLogin = () => {
-    window.location.href = "http://localhost:5000/login";
+    window.location.href = "https://google-integration-backend.onrender.com/login";
   };
 
   return (
