@@ -21,6 +21,9 @@ export default function AuthSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Use Vite env var, fallback to localhost for dev
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const statusParam = params.get("status");
@@ -36,13 +39,17 @@ export default function AuthSuccess() {
     }
 
     checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]);
 
   const checkAuth = async () => {
     try {
-      const res = await fetch("https://google-integration-2.onrender.com/api/me", {
+      const res = await fetch(`${API_URL}/api/me`, {
         method: "GET",
         credentials: "include",
+        headers: {
+          "Accept": "application/json"
+        }
       });
 
       if (res.ok) {
@@ -54,6 +61,10 @@ export default function AuthSuccess() {
           icon: CheckCircle 
         });
       } else {
+        // read error detail if present for debugging
+        let errText = "";
+        try { errText = await res.text(); } catch {}
+        console.warn("Auth failed:", res.status, errText);
         setStatus({ 
           type: "error", 
           message: "Authentication failed", 
@@ -61,6 +72,7 @@ export default function AuthSuccess() {
         });
       }
     } catch (err) {
+      console.error("Network error:", err);
       setStatus({ 
         type: "error", 
         message: "Network error. Please try again.", 
@@ -73,15 +85,26 @@ export default function AuthSuccess() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch("https://google-integration-2.onrender.com/logout", {
+      const res = await fetch(`${API_URL}/logout`, {
         method: "POST",
         credentials: "include",
+        headers: {
+          "Accept": "application/json"
+        }
       });
       
       if (res.ok) {
         navigate("/");
+      } else {
+        console.warn("Logout failed:", res.status);
+        setStatus({ 
+          type: "error", 
+          message: "Logout failed", 
+          icon: XCircle 
+        });
       }
     } catch (e) {
+      console.error("Logout error:", e);
       setStatus({ 
         type: "error", 
         message: "Logout failed", 
