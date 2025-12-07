@@ -40,7 +40,7 @@ export default function AuthSuccess() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch("https://google-integration-ndkv.onrender.com/api/me", {
+      const res = await fetch("https://google-integration-1-6ytp.onrender.com/api/me", {
         method: "GET",
         credentials: "include",
       });
@@ -73,7 +73,7 @@ export default function AuthSuccess() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch("https://google-integration-ndkv.onrender.com/logout", {
+      const res = await fetch("https://google-integration-1-6ytp.onrender.com/logout", {
         method: "POST",
         credentials: "include",
       });
