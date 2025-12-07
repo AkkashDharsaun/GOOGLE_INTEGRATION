@@ -40,7 +40,7 @@ export default function AuthSuccess() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch("https://google-integration-1-6ytp.onrender.com/api/me", {
+      const res = await fetch("https://google-integration-2.onrender.com/api/me", {
         method: "GET",
         credentials: "include",
       });
