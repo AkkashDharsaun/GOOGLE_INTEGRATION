@@ -1,4 +1,3 @@
-# backend/app.py
 import os
 import requests
 from flask import Flask, redirect, url_for, request, jsonify, session, make_response
@@ -11,11 +10,17 @@ from datetime import datetime, timedelta
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "dev_secret") 
+app.secret_key = os.getenv("SECRET_KEY", "dev_secret")
 
+# IMPORTANT: set this in your Render/Vercel env
+FRONTEND_URL = os.getenv("FRONTEND_URL")  # e.g. https://goolgeintegration.vercel.app
 
-FRONTEND_URL = os.getenv("FRONTEND_URL")
-CORS(app, supports_credentials=True, origins=[FRONTEND_URL])
+# Robust CORS setup: only add origins if FRONTEND_URL exists
+if FRONTEND_URL:
+    CORS(app, supports_credentials=True, origins=[FRONTEND_URL])
+else:
+    # fallback for local dev
+    CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://localhost:3000"])
 
 oauth = OAuth(app)
 
@@ -29,17 +34,26 @@ google = oauth.register(
 
 USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 
+def make_cookie_settings():
+    """
+    Returns (secure, samesite) based on environment.
+    In production (https frontend + backend), use secure=True and samesite='None'
+    For local development, keep secure=False and samesite='Lax'
+    """
+    # simple heuristic: if FRONTEND_URL starts with https -> production
+    if FRONTEND_URL and FRONTEND_URL.startswith("https://"):
+        return True, "None"
+    return False, "Lax"
+
 
 @app.route("/login")
 def login():
-   
     redirect_uri = url_for("auth_callback", _external=True)
     return google.authorize_redirect(redirect_uri)
 
 
 @app.route("/auth/callback")
 def auth_callback():
-   
     err = request.args.get("error")
     if err:
         return redirect(f"{FRONTEND_URL}/auth/success?status=cancelled&reason={err}")
@@ -50,14 +64,12 @@ def auth_callback():
 
     userinfo = None
     try:
-
         nonce = session.get(f"oauth_{google.name}_nonce")
         if nonce and token.get("id_token"):
             userinfo = google.parse_id_token(token, nonce=nonce)
         else:
             raise Exception("skip id_token")
     except Exception:
-       
         access_token = token.get("access_token")
         if not access_token:
             return redirect(f"{FRONTEND_URL}/auth/success?status=error")
@@ -67,25 +79,29 @@ def auth_callback():
             return redirect(f"{FRONTEND_URL}/auth/success?status=error")
         userinfo = resp.json()
 
-
     payload = {
         "sub": userinfo.get("sub") or userinfo.get("id"),
         "email": userinfo.get("email"),
         "name": userinfo.get("name"),
-        "picture": userinfo.get("picture"), 
+        "picture": userinfo.get("picture"),
         "exp": datetime.utcnow() + timedelta(hours=4),
     }
     jwt_token = jwt.encode(payload, os.getenv("SECRET_KEY"), algorithm="HS256")
 
+    # pick cookie settings based on env
+    secure_flag, samesite_val = make_cookie_settings()
 
     resp = make_response(redirect(f"{FRONTEND_URL}/auth/success?status=ok"))
+
+    # set cookie attributes clearly
     resp.set_cookie(
         "access_token",
         jwt_token,
         httponly=True,
-        secure=False,   
-        samesite="Lax", 
+        secure=secure_flag,
+        samesite=samesite_val,
         max_age=4 * 3600,
+        # domain optionally set if needed: domain=".yourdomain.com"
     )
     return resp
 
@@ -104,10 +120,12 @@ def me():
 
 @app.route("/logout", methods=["POST"])
 def logout():
+    secure_flag, samesite_val = make_cookie_settings()
     resp = make_response(jsonify({"ok": True, "msg": "logged out"}), 200)
-    resp.set_cookie("access_token", "", expires=0, httponly=True, samesite="Lax")
+    resp.set_cookie("access_token", "", expires=0, httponly=True, samesite=samesite_val, secure=secure_flag)
     session.clear()
     return resp
+
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
